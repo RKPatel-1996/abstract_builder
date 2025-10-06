@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
+// This is the corrected import
+import { generateDocxWithMarkers } from "./utils/generateDocxWithMarkers.js";
+import { postProcessDocx } from "./utils/postProcessDocx.js";
 
 // All Component Imports...
 import Header from "./components/Header";
 import ScrollButtons from "./components/ScrollButtons";
-import FormattingOptions from "./components/FormattingOptions";
 import TitleInput from "./components/TitleInput";
 import AuthorsInput from "./components/AuthorsInput";
 import EmailInputs from "./components/EmailInputs";
@@ -16,32 +17,6 @@ import PreviewPanel from "./components/PreviewPanel";
 import "./App.css";
 
 function App() {
-  // --- STATE MANAGEMENT ---
-  const [globalFormatting, setGlobalFormatting] = useState({
-    font: "Arial",
-    fontSize: 12,
-    lineSpacing: 1.5,
-    alignment: "left",
-  });
-  const [sectionFormatting, setSectionFormatting] = useState({
-    title: { alignment: "center" },
-    authors: { alignment: "center" },
-    affiliations: { alignment: "center" },
-    body: { alignment: "justified" },
-    emails: {},
-    keywords: {},
-  });
-
-  const handleGlobalFormattingChange = (option, value) => {
-    setGlobalFormatting((prev) => ({ ...prev, [option]: value }));
-  };
-  const handleSectionFormattingChange = (section, option, value) => {
-    setSectionFormatting((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], [option]: value },
-    }));
-  };
-
   // All other state...
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [viewMode, setViewMode] = useState("edit");
@@ -108,198 +83,60 @@ function App() {
     localStorage.setItem("theme", newTheme);
   };
 
-  const handleDownload = (isForAttachment = false) => {
-    const getStyle = (section) => ({
-      ...globalFormatting,
-      ...sectionFormatting[section],
-    });
+  // In App.jsx, replace both of your existing handleDownload and handleEmailShare functions with this:
 
-    const createFormattedTextRuns = (text, section) => {
-      const style = getStyle(section);
-      const options = {
-        size: style.fontSize * 2,
-        font: style.font,
-        bold: style.bold,
-      };
+  // In App.jsx
 
-      if (!hasOrganism || organisms.length === 0 || !text) {
-        return [new TextRun({ text, ...options })];
-      }
-      let processedText = text;
-      organisms.forEach((org) => {
-        if (org.genus && org.species) {
-          const correctFullName = `${
-            org.genus.charAt(0).toUpperCase() + org.genus.slice(1).toLowerCase()
-          } ${org.species.toLowerCase()}`;
-          const correctAbbreviation = `${org.genus
-            .charAt(0)
-            .toUpperCase()}. ${org.species.toLowerCase()}`;
-          const fullNameRegex = new RegExp(
-            `\\b${org.genus}\\s+${org.species}\\b`,
-            "gi"
-          );
-          const abbreviationRegex = new RegExp(
-            `\\b${org.genus.charAt(0)}\\.?\\s+${org.species}\\b`,
-            "gi"
-          );
-          processedText = processedText.replace(
-            fullNameRegex,
-            `|||${correctFullName}|||`
-          );
-          processedText = processedText.replace(
-            abbreviationRegex,
-            `|||${correctAbbreviation}|||`
-          );
-        }
-      });
-      return processedText.split("|||").map((part) => {
-        const isOrganism = organisms.some((org) => {
-          const correctFullName = `${
-            org.genus.charAt(0).toUpperCase() + org.genus.slice(1).toLowerCase()
-          } ${org.species.toLowerCase()}`;
-          const correctAbbreviation = `${org.genus
-            .charAt(0)
-            .toUpperCase()}. ${org.species.toLowerCase()}`;
-          return part === correctFullName || part === correctAbbreviation;
-        });
-        return new TextRun({ text: part, italics: isOrganism, ...options });
-      });
+  const handleDownload = async (isForAttachment = false) => {
+    const abstractData = {
+      // ... all your abstract data ...
+      title,
+      hasOrganism,
+      organisms,
+      authors,
+      affiliations,
+      email,
+      secondaryEmail,
+      abstractBody,
+      keywords,
     };
 
-    const usedAffiliationIds = new Set(
-      authors.flatMap((a) => a.affiliationIds)
-    );
-    const affiliationMap = new Map();
-    let charIndex = 0;
-    affiliations.forEach((aff) => {
-      if (usedAffiliationIds.has(aff.id))
-        affiliationMap.set(aff.id, "abcdefghijklmnopqrstuvwxyz"[charIndex++]);
-    });
+    const filename =
+      (title.substring(0, 20).replace(/\s+/g, "_") || "abstract") + ".docx";
 
-    const authorRuns = [];
-    authors.forEach((author, index) => {
-      const style = getStyle("authors");
-      const name = `${author.firstName} ${
-        author.middleInitial ? `${author.middleInitial}. ` : ""
-      }${author.lastName}`.trim();
-      authorRuns.push(
-        new TextRun({ text: name, font: style.font, size: style.fontSize * 2 })
-      );
-      const superscripts = author.affiliationIds
-        .map((id) => affiliationMap.get(id))
-        .join(",");
-      // SUPERSCRIPT FIX: Use a defined character style for reliability
-      if (superscripts)
-        authorRuns.push(
-          new TextRun({ text: superscripts, style: "superscriptStyle" })
-        );
-      if (author.isCorresponding)
-        authorRuns.push(new TextRun({ text: "*", style: "superscriptStyle" }));
-      if (index < authors.length - 1)
-        authorRuns.push(
-          new TextRun({
-            text: ", ",
-            font: style.font,
-            size: style.fontSize * 2,
-          })
-        );
-    });
+    // Step 1: Generate the draft file with placeholders
+    const draftBlob = await generateDocxWithMarkers(abstractData);
 
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              children: createFormattedTextRuns(
-                title.charAt(0).toUpperCase() + title.slice(1).toLowerCase(),
-                "title"
-              ),
-              alignment: getStyle("title").alignment.toUpperCase(),
-              spacing: {
-                after: 240,
-                line: getStyle("title").lineSpacing * 240,
-              },
-            }),
-            new Paragraph({
-              children: authorRuns,
-              alignment: getStyle("authors").alignment.toUpperCase(),
-              spacing: { line: getStyle("authors").lineSpacing * 240 },
-            }),
-            ...affiliations
-              .filter((aff) => usedAffiliationIds.has(aff.id))
-              .map((aff) => {
-                const style = getStyle("affiliations");
-                return new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: affiliationMap.get(aff.id),
-                      style: "superscriptStyle",
-                    }),
-                    new TextRun({
-                      text: ` ${aff.name}`,
-                      font: style.font,
-                      size: (style.fontSize - 2) * 2,
-                    }),
-                  ],
-                  alignment: style.alignment.toUpperCase(),
-                  spacing: { line: style.lineSpacing * 240 },
-                });
-              }),
-            new Paragraph({
-              children: [new TextRun("")],
-              spacing: { after: 240 },
-            }),
-            new Paragraph({
-              children: createFormattedTextRuns(abstractBody, "body"),
-              alignment: getStyle("body").alignment.toUpperCase(),
-              spacing: { after: 240, line: getStyle("body").lineSpacing * 240 },
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Keywords: ",
-                  bold: true,
-                  font: getStyle("keywords").font,
-                  size: getStyle("keywords").fontSize * 2,
-                }),
-                ...createFormattedTextRuns(keywords.join("; "), "keywords"),
-              ],
-              alignment: getStyle("keywords").alignment.toUpperCase(),
-              spacing: {
-                after: 240,
-                line: getStyle("keywords").lineSpacing * 240,
-              },
-            }),
-          ],
-        },
-      ],
-      // SUPERSCRIPT FIX: Define a character style for all superscripts
-      characterStyles: [
-        {
-          id: "superscriptStyle",
-          name: "Superscript",
-          run: {
-            font: getStyle("authors").font, // Base font on author style
-            size: getStyle("authors").fontSize * 2,
-            superscript: true,
-          },
-        },
-      ],
-    });
+    // Step 2: Run our new correction script on the draft file
+    const finalBlob = await postProcessDocx(draftBlob);
 
-    const filename = (email.split("@")[0] || "abstract").trim() + ".docx";
-    return Packer.toBlob(doc).then((blob) => {
-      if (!isForAttachment) {
-        saveAs(blob, filename);
-      }
-      return { blob, filename };
-    });
+    // Step 3: Save the FINAL, corrected file
+    if (!isForAttachment) {
+      saveAs(finalBlob, filename);
+    }
+
+    return { blob: finalBlob, filename };
   };
-
   const handleEmailShare = async () => {
-    /* This function remains unchanged */
-  };
+    alert(
+      "The .docx file will be downloaded first. Please attach it to the email that will open."
+    );
 
+    // FAULT 3 FIXED:
+    // This now correctly calls handleDownload and waits for it to finish.
+    // It receives the `filename` from the handleDownload function instead of trying to guess it.
+    const { filename } = await handleDownload(false); // We call with `false` to trigger the download for the user.
+
+    // Now the rest of the function will work correctly.
+    const subject = title || "Scientific Abstract";
+    const body = `Dear Recipient,\n\nPlease find the attached abstract titled "${subject}".\n\nBest regards,\n${
+      authors.find((a) => a.isCorresponding)?.firstName || ""
+    }`;
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  };
   return (
     <div
       className={`min-h-screen ${
@@ -321,11 +158,6 @@ function App() {
           <div
             className={`${viewMode === "edit" ? "block" : "hidden"} md:block`}
           >
-            <FormattingOptions
-              options={globalFormatting}
-              onChange={handleGlobalFormattingChange}
-            />
-
             <TitleInput
               title={title}
               setTitle={setTitle}
@@ -335,10 +167,7 @@ function App() {
               onAddOrganism={addOrganism}
               onRemoveOrganism={removeOrganism}
               onUpdateOrganism={updateOrganism}
-              sectionFormatting={sectionFormatting.title}
-              onSectionFormattingChange={handleSectionFormattingChange}
             />
-
             <AuthorsInput
               authors={authors}
               affiliations={affiliations}
@@ -347,30 +176,15 @@ function App() {
               onRemoveAuthor={removeAuthor}
               onAddAffiliation={addAffiliation}
               onRemoveAffiliation={removeAffiliation}
-              sectionFormatting={sectionFormatting.authors}
-              onSectionFormattingChange={handleSectionFormattingChange}
             />
-
             <EmailInputs
               email={email}
               setEmail={setEmail}
               secondaryEmail={secondaryEmail}
               setSecondaryEmail={setSecondaryEmail}
             />
-
-            <AbstractBodyInput
-              body={abstractBody}
-              setBody={setAbstractBody}
-              sectionFormatting={sectionFormatting.body}
-              onSectionFormattingChange={handleSectionFormattingChange}
-            />
-
-            <KeywordsInput
-              keywords={keywords}
-              setKeywords={setKeywords}
-              sectionFormatting={sectionFormatting.keywords}
-              onSectionFormattingChange={handleSectionFormattingChange}
-            />
+            <AbstractBodyInput body={abstractBody} setBody={setAbstractBody} />
+            <KeywordsInput keywords={keywords} setKeywords={setKeywords} />
           </div>
           <div
             className={`${
@@ -378,23 +192,17 @@ function App() {
             } md:block md:sticky md:top-24 h-fit`}
           >
             {/* PREVIEW PANEL */}
-            <div
-              className={`${
-                viewMode === "view" ? "block" : "hidden"
-              } md:block md:sticky md:top-24 h-fit`}
-            >
-              <PreviewPanel
-                title={title}
-                hasOrganism={hasOrganism}
-                organisms={organisms}
-                authors={authors}
-                affiliations={affiliations}
-                email={email}
-                secondaryEmail={secondaryEmail}
-                body={abstractBody}
-                keywords={keywords}
-              />
-            </div>
+            <PreviewPanel
+              title={title}
+              hasOrganism={hasOrganism}
+              organisms={organisms}
+              authors={authors}
+              affiliations={affiliations}
+              email={email}
+              secondaryEmail={secondaryEmail}
+              body={abstractBody}
+              keywords={keywords}
+            />
           </div>
         </div>
       </main>

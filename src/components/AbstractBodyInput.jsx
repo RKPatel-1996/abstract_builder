@@ -1,13 +1,6 @@
 import React from "react";
-import SectionFormatControls from "./SectionFormatControls";
 
-const AbstractBodyInput = ({
-  body,
-  setBody,
-  sectionFormatting,
-  onSectionFormattingChange,
-  charLimit = 1500,
-}) => {
+const AbstractBodyInput = ({ body, setBody, charLimit = 1500 }) => {
   const charCount = body.length;
   const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
   const limitExceeded = charCount > charLimit;
@@ -40,11 +33,6 @@ const AbstractBodyInput = ({
           {charCount} / {charLimit} characters
         </span>
       </div>
-      <SectionFormatControls
-        sectionName="body"
-        formatting={sectionFormatting}
-        onChange={onSectionFormattingChange}
-      />
     </div>
   );
 };

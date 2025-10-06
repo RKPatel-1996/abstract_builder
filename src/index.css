@@ -9,3 +9,12 @@ body {
 body.dark {
   @apply bg-gray-900 text-gray-100;
 }
+
+/* Add this to the bottom of your src/index.css file */
+body {
+  @apply bg-gray-50 text-gray-800 transition-colors duration-300;
+}
+
+.dark body {
+  @apply bg-gray-900 text-gray-200;
+}

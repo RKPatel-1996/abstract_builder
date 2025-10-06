@@ -1,13 +1,7 @@
 import React, { useState } from "react";
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-import SectionFormatControls from "./SectionFormatControls";
 
-const KeywordsInput = ({
-  keywords,
-  setKeywords,
-  sectionFormatting,
-  onSectionFormattingChange,
-}) => {
+const KeywordsInput = ({ keywords, setKeywords }) => {
   const [currentKeyword, setCurrentKeyword] = useState("");
   const handleAddKeyword = () => {
     if (
@@ -70,11 +64,6 @@ const KeywordsInput = ({
           </div>
         ))}
       </div>
-      <SectionFormatControls
-        sectionName="keywords"
-        formatting={sectionFormatting}
-        onChange={onSectionFormattingChange}
-      />
     </div>
   );
 };

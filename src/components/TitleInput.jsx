@@ -1,6 +1,5 @@
 import React from "react";
 import { PlusCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import SectionFormatControls from "./SectionFormatControls";
 
 const TitleInput = ({
   title,
@@ -11,8 +10,6 @@ const TitleInput = ({
   onAddOrganism,
   onRemoveOrganism,
   onUpdateOrganism,
-  sectionFormatting,
-  onSectionFormattingChange,
 }) => {
   const handleOrganismChange = (id, field, value) => {
     if (field === "genus") {
@@ -120,11 +117,6 @@ const TitleInput = ({
           </button>
         </div>
       )}
-      <SectionFormatControls
-        sectionName="title"
-        formatting={sectionFormatting}
-        onChange={onSectionFormattingChange}
-      />
     </div>
   );
 };

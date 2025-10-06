@@ -4,7 +4,6 @@ import {
   TrashIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
-import SectionFormatControls from "./SectionFormatControls";
 
 const AuthorsInput = ({
   authors,
@@ -14,8 +13,6 @@ const AuthorsInput = ({
   onRemoveAuthor,
   onAddAffiliation,
   onRemoveAffiliation,
-  sectionFormatting,
-  onSectionFormattingChange,
 }) => {
   const [newAffiliation, setNewAffiliation] = useState("");
   const handleAddAffiliation = () => {
@@ -208,11 +205,6 @@ const AuthorsInput = ({
         <UserPlusIcon className="h-5 w-5" />
         Add Another Author
       </button>
-      <SectionFormatControls
-        sectionName="authors"
-        formatting={sectionFormatting}
-        onChange={onSectionFormattingChange}
-      />
     </div>
   );
 };
