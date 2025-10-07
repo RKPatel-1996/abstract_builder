@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import { generateDocxWithMarkers } from "./utils/generateDocxWithMarkers.js";
 import { postProcessDocx } from "./utils/postProcessDocx.js";
+import ConferenceBanner from "./components/ConferenceBanner";
 
 // Component Imports
 import SubmissionDetails from "./components/SubmissionDetails";
@@ -181,6 +182,7 @@ function App() {
         onEmail={handleEmailShare}
       />
       <main className="p-4 sm:p-6 lg:p-8">
+        <ConferenceBanner />
         <div className="md:hidden">
           <ViewEditToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
