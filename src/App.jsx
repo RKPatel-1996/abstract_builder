@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-// This is the corrected import
 import { generateDocxWithMarkers } from "./utils/generateDocxWithMarkers.js";
 import { postProcessDocx } from "./utils/postProcessDocx.js";
 
-// All Component Imports...
+// Component Imports
+import SubmissionDetails from "./components/SubmissionDetails";
+import AbstractIdDisplay from "./components/AbstractIdDisplay";
 import Header from "./components/Header";
 import ScrollButtons from "./components/ScrollButtons";
 import TitleInput from "./components/TitleInput";
@@ -17,7 +18,15 @@ import PreviewPanel from "./components/PreviewPanel";
 import "./App.css";
 
 function App() {
-  // All other state...
+  // --- All State Hooks are now correctly inside the App component ---
+
+  // New states for submission details
+  const [category, setCategory] = useState("YIT");
+  const [presentingAuthor, setPresentingAuthor] = useState("");
+  const [submissionDateTime, setSubmissionDateTime] = useState(new Date());
+  const [abstractId, setAbstractId] = useState("");
+
+  // Original states
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [viewMode, setViewMode] = useState("edit");
   const [title, setTitle] = useState("");
@@ -39,7 +48,39 @@ function App() {
   const [abstractBody, setAbstractBody] = useState("");
   const [keywords, setKeywords] = useState([]);
 
-  // All other handlers...
+  // --- All useEffects are now correctly inside the App component ---
+
+  // useEffect to generate the Abstract ID
+  useEffect(() => {
+    const categoryAbbr = category;
+    const authorInitials = presentingAuthor
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+    const d = submissionDateTime;
+    const dateStr = `${d.getDate()}${d.getMonth() + 1}`;
+    let hours = d.getHours();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const timeStr = `${hours}${minutes}${ampm}`;
+
+    if (authorInitials) {
+      setAbstractId(`${categoryAbbr}_${authorInitials}_${dateStr}_${timeStr}`);
+    } else {
+      setAbstractId("");
+    }
+  }, [category, presentingAuthor, submissionDateTime]);
+
+  // useEffect for theme
+  useEffect(() => {
+    document.documentElement.className = theme;
+  }, [theme]);
+
+  // --- All Handler Functions ---
+
   const addOrganism = () =>
     setOrganisms([...organisms, { id: Date.now(), genus: "", species: "" }]);
   const removeOrganism = (id) =>
@@ -48,6 +89,7 @@ function App() {
     setOrganisms(
       organisms.map((org) => (org.id === id ? { ...org, [field]: value } : org))
     );
+
   const addAuthor = () =>
     setAuthors([
       ...authors,
@@ -63,6 +105,7 @@ function App() {
   const removeAuthor = (id) =>
     setAuthors(authors.filter((author) => author.id !== id));
   const updateAuthors = (updatedAuthors) => setAuthors(updatedAuthors);
+
   const addAffiliation = (name) =>
     setAffiliations([...affiliations, { id: Date.now(), name }]);
   const removeAffiliation = (id) => {
@@ -74,22 +117,16 @@ function App() {
       }))
     );
   };
-  useEffect(() => {
-    document.documentElement.className = theme;
-  }, [theme]);
+
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
   };
 
-  // In App.jsx, replace both of your existing handleDownload and handleEmailShare functions with this:
-
-  // In App.jsx
-
   const handleDownload = async (isForAttachment = false) => {
     const abstractData = {
-      // ... all your abstract data ...
+      abstractId, // ADDED: Pass the ID to the generator
       title,
       hasOrganism,
       organisms,
@@ -101,33 +138,24 @@ function App() {
       keywords,
     };
 
-    const filename =
-      (title.substring(0, 20).replace(/\s+/g, "_") || "abstract") + ".docx";
+    // FIXED: Corrected the filename generation
+    const filename = `${abstractId || "abstract"}.docx`;
 
-    // Step 1: Generate the draft file with placeholders
     const draftBlob = await generateDocxWithMarkers(abstractData);
-
-    // Step 2: Run our new correction script on the draft file
     const finalBlob = await postProcessDocx(draftBlob);
 
-    // Step 3: Save the FINAL, corrected file
     if (!isForAttachment) {
       saveAs(finalBlob, filename);
     }
-
     return { blob: finalBlob, filename };
   };
+
   const handleEmailShare = async () => {
     alert(
       "The .docx file will be downloaded first. Please attach it to the email that will open."
     );
+    await handleDownload(false);
 
-    // FAULT 3 FIXED:
-    // This now correctly calls handleDownload and waits for it to finish.
-    // It receives the `filename` from the handleDownload function instead of trying to guess it.
-    const { filename } = await handleDownload(false); // We call with `false` to trigger the download for the user.
-
-    // Now the rest of the function will work correctly.
     const subject = title || "Scientific Abstract";
     const body = `Dear Recipient,\n\nPlease find the attached abstract titled "${subject}".\n\nBest regards,\n${
       authors.find((a) => a.isCorresponding)?.firstName || ""
@@ -137,6 +165,9 @@ function App() {
     )}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
   };
+
+  // --- JSX Return ---
+
   return (
     <div
       className={`min-h-screen ${
@@ -158,6 +189,13 @@ function App() {
           <div
             className={`${viewMode === "edit" ? "block" : "hidden"} md:block`}
           >
+            <SubmissionDetails
+              category={category}
+              setCategory={setCategory}
+              presentingAuthor={presentingAuthor}
+              setPresentingAuthor={setPresentingAuthor}
+            />
+            <AbstractIdDisplay id={abstractId} />
             <TitleInput
               title={title}
               setTitle={setTitle}
@@ -186,13 +224,18 @@ function App() {
             <AbstractBodyInput body={abstractBody} setBody={setAbstractBody} />
             <KeywordsInput keywords={keywords} setKeywords={setKeywords} />
           </div>
+          {/* PREVIEW PANEL */}
           <div
             className={`${
               viewMode === "view" ? "block" : "hidden"
             } md:block md:sticky md:top-24 h-fit`}
           >
-            {/* PREVIEW PANEL */}
             <PreviewPanel
+              // Pass new props for the ID display in the preview
+              abstractId={abstractId}
+              presentingAuthor={presentingAuthor}
+              category={category}
+              // Original props
               title={title}
               hasOrganism={hasOrganism}
               organisms={organisms}

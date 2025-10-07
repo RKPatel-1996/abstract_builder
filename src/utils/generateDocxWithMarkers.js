@@ -8,6 +8,7 @@ const capitalizeSentences = (text) => {
 
 export const generateDocxWithMarkers = (data) => {
   const {
+    abstractId,
     title,
     hasOrganism,
     organisms,
@@ -185,6 +186,7 @@ export const generateDocxWithMarkers = (data) => {
       })
     : null;
 
+  // FIND THE abstractHeading PARAGRAPH
   const abstractHeading = new Paragraph({
     children: [
       new TextRun({
@@ -192,6 +194,13 @@ export const generateDocxWithMarkers = (data) => {
         bold: true,
         size: 12 * 2,
         font: FONT_CHOICE,
+      }),
+      // ADD THIS NEW TextRun for the ID
+      new TextRun({
+        text: ` [${abstractId}]`,
+        bold: true,
+        size: 11 * 2, // Slightly smaller
+        color: "A9A9A9", // Dark Gray
       }),
     ],
     spacing: twoLinesSpace,
