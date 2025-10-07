@@ -36,17 +36,17 @@ const ConferenceBanner = () => {
         </p>
 
         <h1 className="font-serif text-2xl sm:text-4xl font-bold text-white my-2">
-          "Advances in Biological Sciences for Sustainable Development"
+          Advances in Biological Sciences for Sustainable Development
         </h1>
 
         <p className="mt-3 text-sm text-gray-200">
-          Organized by the{" "}
-          <strong className="font-semibold text-white">
+          Organized by the <br />
+          <strong className="font-semibold text-xl text-white">
             Department of Microbiology and Biotechnology, Gujarat University
           </strong>
           <br />
-          in collaboration with the{" "}
-          <strong className="font-semibold text-white">
+          in collaboration with the <br />
+          <strong className="font-semibold text-xl text-white">
             Indian Institute of Technology-Gandhinagar
           </strong>
         </p>
