@@ -18,6 +18,7 @@ import ViewEditToggle from "./components/ViewEditToggle";
 import PreviewPanel from "./components/PreviewPanel";
 import DownloadButton from "./components/DownloadButton";
 import EmailInstructions from "./components/EmailInstructions";
+import { conferenceThemes } from "./themes.js";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
   // New states for submission details
 
   const [category, setCategory] = useState("YIT");
+  const [selectedTheme, setSelectedTheme] = useState(""); // Default to T1
   const [presentingAuthor, setPresentingAuthor] = useState("");
   const [submissionDateTime, setSubmissionDateTime] = useState(new Date());
   const [abstractId, setAbstractId] = useState("");
@@ -35,7 +37,7 @@ function App() {
   const [viewMode, setViewMode] = useState("edit");
   const [title, setTitle] = useState("");
   const [capitalizedTitle, setCapitalizedTitle] = useState("");
-  const [hasOrganism, setHasOrganism] = useState(false);
+  const [hasOrganism, setHasOrganism] = useState(true);
   const [organisms, setOrganisms] = useState([]);
   const [authors, setAuthors] = useState([
     {
@@ -57,6 +59,7 @@ function App() {
 
   // useEffect to generate the Abstract ID
   useEffect(() => {
+    const themeAbbr = selectedTheme;
     const categoryAbbr = category;
     const authorInitials = presentingAuthor
       .split(" ")
@@ -73,11 +76,13 @@ function App() {
     const timeStr = `${hours}${minutes}${ampm}`;
 
     if (authorInitials) {
-      setAbstractId(`${categoryAbbr}_${authorInitials}_${dateStr}_${timeStr}`);
+      setAbstractId(
+        `${themeAbbr}_${categoryAbbr}_${authorInitials}_${dateStr}_${timeStr}`
+      );
     } else {
       setAbstractId("");
     }
-  }, [category, presentingAuthor, submissionDateTime]);
+  }, [selectedTheme, category, presentingAuthor, submissionDateTime]);
 
   // useEffect for theme
   useEffect(() => {
@@ -248,10 +253,17 @@ ${presentingAuthor}
             <SubmissionDetails
               category={category}
               setCategory={setCategory}
+              selectedTheme={selectedTheme} // <-- ADD THIS
+              setSelectedTheme={setSelectedTheme} // <-- ADD THIS
+              themes={conferenceThemes}
               presentingAuthor={presentingAuthor}
               setPresentingAuthor={setPresentingAuthor}
             />
-            <AbstractIdDisplay id={abstractId} />
+            <AbstractIdDisplay
+              id={abstractId}
+              theme={selectedTheme}
+              category={category}
+            />
             <TitleInput
               title={title}
               setTitle={setTitle}
@@ -319,14 +331,18 @@ ${presentingAuthor}
               }`}
               body={`Dear Organizing Committee,
 
-This email contains my abstract submission for the conference, titled "${title}".
+This email contains my abstract submission for the conference.
 
 My unique Abstract ID is: ${abstractId}
 
 --- Submission Details ---
-1. Abstract Title: ${capitalizedTitle}
-2. Presenting Author: ${presentingAuthor}
-3. Corresponding Author Email: ${email}
+1. Theme ${selectedTheme}: ${
+                conferenceThemes.find((t) => t.code === selectedTheme)?.title ||
+                "Not Selected"
+              }
+2. Abstract Title: ${capitalizedTitle}
+3. Presenting Author: ${presentingAuthor}
+4. Corresponding Author Email: ${email}
 --------------------------
 
 The formatted .docx file is attached to this email.
@@ -335,7 +351,7 @@ Thank you for your consideration.
 
 Sincerely,
 ${presentingAuthor}`}
-            />
+            />{" "}
           </div>
           {/* The right column is empty, ensuring correct alignment */}
           <div></div>

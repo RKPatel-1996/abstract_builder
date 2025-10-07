@@ -41,20 +41,9 @@ const TitleInput = ({
           className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
         />
       </div>
-      <div className="flex items-center mb-4">
-        <input
-          type="checkbox"
-          id="hasOrganism"
-          checked={hasOrganism}
-          onChange={(e) => setHasOrganism(e.target.checked)}
-          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <label
-          htmlFor="hasOrganism"
-          className="ml-2 block text-sm text-gray-900 dark:text-gray-200"
-        >
-          Does your text contain scientific names for organisms?
-        </label>
+      <div className="p-2 mb-4 text-sm text-red-800 bg-blue-100 rounded-lg dark:bg-gray-700 dark:text-red-300">
+        <strong>Notice:</strong> Add the scientific names of any organisms below
+        to ensure they are automatically formatted in entire document.
       </div>
       {hasOrganism && (
         <div className="p-4 border-t dark:border-gray-700 space-y-4">
