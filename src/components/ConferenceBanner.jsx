@@ -10,12 +10,11 @@ const ConferenceBanner = () => {
     <div className="bg-[#5c0d48] text-gray-100 shadow-lg rounded-lg p-6 sm:p-8 mb-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Gujarat University Logo */}
-        <div className="flex-shrink-0">
-          {/* Added a subtle drop shadow to lift the logo off the background */}
+        <div className="flex-shrink-0 bg-white dark:bg-gray-100 p-1 rounded-full shadow-md flex items-center justify-center h-28 w-28 sm:h-32 sm:w-32">
           <img
             src={guLogo}
             alt="Gujarat University Logo"
-            className="h-20 sm:h-28 filter drop-shadow(0 1px 2px rgba(0,0,0,0.5))"
+            className="h-full w-full object-contain"
           />
         </div>
 
@@ -51,11 +50,13 @@ const ConferenceBanner = () => {
         </div>
 
         {/* IIT Gandhinagar Logo */}
-        <div className="flex-shrink-0">
+        {/* IIT Gandhinagar Logo with grayish-white background */}
+        {/* IIT Gandhinagar Logo with grayish-white background */}
+        <div className="flex-shrink-0 bg-white dark:bg-gray-100 p-1 rounded-full shadow-md flex items-center justify-center h-28 w-28 sm:h-32 sm:w-32">
           <img
             src={iitLogo}
             alt="IIT Gandhinagar Logo"
-            className="h-20 sm:h-28 filter drop-shadow(0 1px 2px rgba(0,0,0,0.5))"
+            className="h-full w-full object-contain"
           />
         </div>
       </div>
