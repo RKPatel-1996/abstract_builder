@@ -25,6 +25,7 @@ const EmailInputs = ({
           id="correspondingEmail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => setEmail(email.trim())}
           placeholder="e.g., priya.sharma@email.com"
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
           required
@@ -44,6 +45,7 @@ const EmailInputs = ({
           id="secondaryEmail"
           value={secondaryEmail}
           onChange={(e) => setSecondaryEmail(e.target.value)}
+          onBlur={() => setSecondaryEmail(secondaryEmail.trim())}
           placeholder="Optional backup email"
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
         />

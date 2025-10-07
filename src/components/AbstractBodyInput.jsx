@@ -16,6 +16,7 @@ const AbstractBodyInput = ({ body, setBody, charLimit = 1500 }) => {
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
+        onBlur={() => setBody(body.trim())}
         placeholder="Paste the main text of your abstract here..."
         className={`w-full h-48 px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 ${
           limitExceeded

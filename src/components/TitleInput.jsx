@@ -36,6 +36,7 @@ const TitleInput = ({
           id="abstractTitle"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          onBlur={() => setTitle(title.trim())} // <-- ADD THIS LINE
           placeholder="e.g., A Comparative Study of Escherichia coli and Staphylococcus aureus"
           className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
         />

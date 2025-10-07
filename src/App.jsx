@@ -16,12 +16,15 @@ import AbstractBodyInput from "./components/AbstractBodyInput";
 import KeywordsInput from "./components/KeywordsInput";
 import ViewEditToggle from "./components/ViewEditToggle";
 import PreviewPanel from "./components/PreviewPanel";
+import DownloadButton from "./components/DownloadButton";
+import EmailInstructions from "./components/EmailInstructions";
 import "./App.css";
 
 function App() {
   // --- All State Hooks are now correctly inside the App component ---
 
   // New states for submission details
+
   const [category, setCategory] = useState("YIT");
   const [presentingAuthor, setPresentingAuthor] = useState("");
   const [submissionDateTime, setSubmissionDateTime] = useState(new Date());
@@ -31,6 +34,7 @@ function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [viewMode, setViewMode] = useState("edit");
   const [title, setTitle] = useState("");
+  const [capitalizedTitle, setCapitalizedTitle] = useState("");
   const [hasOrganism, setHasOrganism] = useState(false);
   const [organisms, setOrganisms] = useState([]);
   const [authors, setAuthors] = useState([
@@ -80,6 +84,15 @@ function App() {
     document.documentElement.className = theme;
   }, [theme]);
 
+  useEffect(() => {
+    if (title.length > 0) {
+      const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
+      setCapitalizedTitle(formattedTitle);
+    } else {
+      setCapitalizedTitle("");
+    }
+  }, [title]);
+
   // --- All Handler Functions ---
 
   const addOrganism = () =>
@@ -88,7 +101,9 @@ function App() {
     setOrganisms(organisms.filter((org) => org.id !== id));
   const updateOrganism = (id, field, value) =>
     setOrganisms(
-      organisms.map((org) => (org.id === id ? { ...org, [field]: value } : org))
+      organisms.map(
+        (org) => (org.id === id ? { ...org, [field]: value.trim() } : org) // Trim here
+      )
     );
 
   const addAuthor = () =>
@@ -105,7 +120,15 @@ function App() {
     ]);
   const removeAuthor = (id) =>
     setAuthors(authors.filter((author) => author.id !== id));
-  const updateAuthors = (updatedAuthors) => setAuthors(updatedAuthors);
+  const updateAuthors = (updatedAuthors) => {
+    const trimmedAuthors = updatedAuthors.map((author) => ({
+      ...author,
+      firstName: author.firstName.trim(),
+      middleInitial: author.middleInitial.trim(),
+      lastName: author.lastName.trim(),
+    }));
+    setAuthors(trimmedAuthors);
+  };
 
   const addAffiliation = (name) =>
     setAffiliations([...affiliations, { id: Date.now(), name }]);
@@ -125,10 +148,14 @@ function App() {
     localStorage.setItem("theme", newTheme);
   };
 
+  const handleBlurTrim = (value, setterFunction) => {
+    setterFunction(value.trim());
+  };
+
   const handleDownload = async (isForAttachment = false) => {
     const abstractData = {
       abstractId, // ADDED: Pass the ID to the generator
-      title,
+      title: capitalizedTitle,
       hasOrganism,
       organisms,
       authors,
@@ -151,23 +178,51 @@ function App() {
     return { blob: finalBlob, filename };
   };
 
-  const handleEmailShare = async () => {
-    alert(
-      "The .docx file will be downloaded first. Please attach it to the email that will open."
-    );
-    await handleDownload(false);
+  const handleEmailShare = () => {
+    // Step 1: Gather all the data for the email first.
+    const recipientEmail = "mibit.conf.2025@gmail.com";
 
-    const subject = title || "Scientific Abstract";
-    const body = `Dear Recipient,\n\nPlease find the attached abstract titled "${subject}".\n\nBest regards,\n${
-      authors.find((a) => a.isCorresponding)?.firstName || ""
+    const subject = `Submission: ${abstractId || "Abstract"} - ${
+      presentingAuthor || "Author"
     }`;
-    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
+
+    const body = `Dear Organizing Committee,
+
+Please find my abstract submission attached to this email.
+
+--- Submission Details ---
+Abstract ID: ${abstractId}
+Abstract Title: ${capitalizedTitle}
+Presenting Author: ${presentingAuthor}
+Corresponding Author Email: ${email}
+--------------------------
+
+A .docx file of this abstract has been downloaded to my device, and I have attached it to this email.
+
+Thank you for your consideration.
+
+Sincerely,
+${presentingAuthor}
+`;
+
+    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-  };
 
-  // --- JSX Return ---
+    // --- NEW, MORE ROBUST METHOD ---
+    // Step 2: Create a temporary link, click it, and then remove it.
+    // This is more reliable across different browsers.
+    const link = document.createElement("a");
+    link.href = mailtoLink;
+    document.body.appendChild(link); // Append to the DOM
+    link.click(); // Programmatically click the link
+    document.body.removeChild(link); // Clean up and remove the link
+
+    // Step 3: Use a small timeout before starting the download.
+    setTimeout(() => {
+      handleDownload(false);
+    }, 100);
+  };
 
   return (
     <div
@@ -179,7 +234,6 @@ function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         onDownload={() => handleDownload(false)}
-        onEmail={handleEmailShare}
       />
       <main className="p-4 sm:p-6 lg:p-8">
         <ConferenceBanner />
@@ -238,7 +292,7 @@ function App() {
               presentingAuthor={presentingAuthor}
               category={category}
               // Original props
-              title={title}
+              title={capitalizedTitle}
               hasOrganism={hasOrganism}
               organisms={organisms}
               authors={authors}
@@ -249,7 +303,44 @@ function App() {
               keywords={keywords}
             />
           </div>
+          //...
+          {/* This is the closing tag of the main 2-column grid */}
         </div>
+
+        {/* --- ADD THIS NEW SECTION BELOW THE GRID --- */}
+        <div className="max-w-7xl mx-auto md:grid md:grid-cols-2 md:gap-8">
+          {/* This div acts as a placeholder for the left column */}
+          <div>
+            <DownloadButton onDownload={() => handleDownload(false)} />
+            <EmailInstructions
+              recipient="mibit.conf.2025@gmail.com"
+              subject={`Submission: ${abstractId || "Abstract"} - ${
+                presentingAuthor || "Author"
+              }`}
+              body={`Dear Organizing Committee,
+
+This email contains my abstract submission for the conference, titled "${title}".
+
+My unique Abstract ID is: ${abstractId}
+
+--- Submission Details ---
+1. Abstract Title: ${capitalizedTitle}
+2. Presenting Author: ${presentingAuthor}
+3. Corresponding Author Email: ${email}
+--------------------------
+
+The formatted .docx file is attached to this email.
+
+Thank you for your consideration.
+
+Sincerely,
+${presentingAuthor}`}
+            />
+          </div>
+          {/* The right column is empty, ensuring correct alignment */}
+          <div></div>
+        </div>
+        {/* ------------------------------------------- */}
       </main>
       <ScrollButtons />
     </div>

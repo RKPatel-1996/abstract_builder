@@ -56,6 +56,7 @@ const SubmissionDetails = ({
             id="presenting-author"
             value={presentingAuthor}
             onChange={(e) => setPresentingAuthor(e.target.value)}
+            onBlur={() => setPresentingAuthor(presentingAuthor.trim())} // <-- ADD THIS LINE
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g., Priya Sharma"
           />
