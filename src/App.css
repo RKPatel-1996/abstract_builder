@@ -1,23 +1,36 @@
+/* --- General Settings --- */
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2em; /* Default padding for wide screens */
   text-align: center;
 }
 
+.card {
+  padding: 2em; /* Default padding for wide screens */
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* --- Logo Settings --- */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* --- Animation Settings --- */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -33,10 +46,19 @@
   }
 }
 
-.card {
-  padding: 2em;
-}
+/* --- Responsive Settings for Mobile --- */
+/* This applies the styles when the screen is 768px wide or less */
+@media (max-width: 768px) {
+  #root {
+    padding: 0.2em; /* Reduce padding to save space */
+  }
 
-.read-the-docs {
-  color: #888;
+  .card {
+    padding: 0.2 em; /* Reduce card padding */
+  }
+
+  .logo {
+    height: 4.5em; /* Make the logo smaller */
+    padding: 1em; /* Reduce padding around the logo */
+  }
 }
